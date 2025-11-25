@@ -5,7 +5,7 @@ import { buildIconPrompt } from "@/lib/prompt";
 import type { PresetStyleId } from "@/lib/styles";
 
 const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN!,
+  auth: "r8_SeiSk1lxzPgZ1G5opIan5Z8Es6yB94c1R90WZ",
 });
 
 export const runtime = "nodejs";
