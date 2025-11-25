@@ -1,0 +1,75 @@
+// app/api/generate/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import Replicate from "replicate";
+import { buildIconPrompt } from "@/lib/prompt";
+import type { PresetStyleId } from "@/lib/styles";
+
+const replicate = new Replicate({
+  // Will use process.env.REPLICATE_API_TOKEN by default,
+  // but we pass it explicitly for clarity.
+  auth: process.env.REPLICATE_API_TOKEN!,
+});
+
+export const runtime = "nodejs"; // important for using Replicate SDK on Vercel
+
+interface GenerateRequestBody {
+  prompt: string;
+  style: PresetStyleId;
+  colors?: string[];
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = (await req.json()) as GenerateRequestBody;
+
+    if (!body.prompt || !body.prompt.trim()) {
+      return NextResponse.json(
+        { error: "Prompt is required." },
+        { status: 400 }
+      );
+    }
+
+    const style = body.style ?? "sticker";
+    const colors =
+      Array.isArray(body.colors) && body.colors.length > 0
+        ? body.colors
+        : undefined;
+
+    const composedPrompt = buildIconPrompt({
+      basePrompt: body.prompt,
+      styleId: style,
+      colors,
+    });
+
+    // Call Replicate – FLUX.1 [schnell] :contentReference[oaicite:0]{index=0}
+    const output = (await replicate.run("black-forest-labs/flux-schnell", {
+      input: {
+        prompt: composedPrompt,
+        aspect_ratio: "1:1",
+        num_outputs: 4,
+        output_format: "png",
+        output_quality: 90,
+        // optionally: megapixels: "0.25", // lower res, closer to 512x512 feel
+      },
+    })) as any[];
+
+    const imageUrls = output.map((file: any) => {
+      // FileOutput from Replicate SDK
+      if (file && typeof file.url === "function") {
+        return file.url() as string;
+      }
+      return String(file);
+    });
+
+    return NextResponse.json({ images: imageUrls });
+  } catch (error: any) {
+    console.error("Replicate error:", error);
+    return NextResponse.json(
+      {
+        error:
+          "Failed to generate icons. Please try again, or check your API token.",
+      },
+      { status: 500 }
+    );
+  }
+}
