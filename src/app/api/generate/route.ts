@@ -5,12 +5,10 @@ import { buildIconPrompt } from "@/lib/prompt";
 import type { PresetStyleId } from "@/lib/styles";
 
 const replicate = new Replicate({
-  // Will use process.env.REPLICATE_API_TOKEN by default,
-  // but we pass it explicitly for clarity.
   auth: process.env.REPLICATE_API_TOKEN!,
 });
 
-export const runtime = "nodejs"; // important for using Replicate SDK on Vercel
+export const runtime = "nodejs";
 
 interface GenerateRequestBody {
   prompt: string;
@@ -41,7 +39,6 @@ export async function POST(req: NextRequest) {
       colors,
     });
 
-    // Call Replicate – FLUX.1 [schnell] :contentReference[oaicite:0]{index=0}
     const output = (await replicate.run("black-forest-labs/flux-schnell", {
       input: {
         prompt: composedPrompt,
@@ -49,12 +46,10 @@ export async function POST(req: NextRequest) {
         num_outputs: 4,
         output_format: "png",
         output_quality: 90,
-        // optionally: megapixels: "0.25", // lower res, closer to 512x512 feel
       },
     })) as any[];
 
     const imageUrls = output.map((file: any) => {
-      // FileOutput from Replicate SDK
       if (file && typeof file.url === "function") {
         return file.url() as string;
       }

@@ -35,7 +35,6 @@ export default function IconGrid({ images, isLoading }: IconGridProps) {
             className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm flex flex-col items-center"
           >
             <div className="aspect-square w-full overflow-hidden rounded-lg bg-slate-50">
-              {/* 512x512 visual size */}
               <img
                 src={url}
                 alt={`Generated icon ${idx + 1}`}
